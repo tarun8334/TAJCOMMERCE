@@ -1,14 +1,28 @@
+
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Layout from '../components/Layout';
 import { FaTrash } from 'react-icons/fa';
+import { Modal } from 'react-bootstrap';
+import {addDoc,collection} from  'firebase/firestore';
+import fireDB from '../fireConfig';
+import { toast } from 'react-toastify';
 
 function CartPage() {
 
   const { cartItems } = useSelector(state => state.cartReducer);
   const [ totalAmount, setTotalAmount ] = useState(0);
   const dispatch = useDispatch();
+  const [show, setShow] = useState(false);
 
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
+  const [name,setName] = useState("");
+  const [address,setAddress] = useState("");
+  const [pincode,setPincode] = useState("");
+
+  const [phoneNumber,setPhoneNumber] = useState("");
+  const [loading,setLoading] = useState(false);
   useEffect(() => {
     let temp = 0;
     cartItems.forEach((cartItem) => {
@@ -25,10 +39,37 @@ setTotalAmount(temp);
   const deleteFromCart = (product) => {
     dispatch({ type: "DELETE_FROM_CART", payload: product });
   };
+const placeOrder = async()=>{
+  const addressInfo = {
+    name,
+    address,
+    pincode,
+    phoneNumber,
+  }
+  console.log(addressInfo);
 
+  const orderInfo = {
+    cartItems,
+    addressInfo,
+    email : JSON.parse(localStorage.getItem("currentUser")).user.email,
+    userid : JSON.parse(localStorage.getItem("currentUser")).user.uid
+  }
+  try{
+    setLoading(true);
+const result = await addDoc(collection(fireDB,"orders"),orderInfo)
+setLoading(false);
+toast.success('order placed successfully')  
+handleClose()
+} catch(error){
+  setLoading(false);
+
+  toast.error('order failed')  
+
+  }
+};
 
   return (
-    <Layout>
+    <Layout loading={loading}>
 
       <table className='table mt-2'>
         <thead>
@@ -60,8 +101,40 @@ setTotalAmount(temp);
       </div>
 
       <div className='d-flex justify-content-end mt-3'>
-<button>Place Order</button>
+<button onClick={handleShow}>Place Order</button>
       </div>
+
+      <Modal show={show} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Add your address</Modal.Title>
+        </Modal.Header>
+        <Modal.Body><div className="register-form">
+  <h2>Register</h2>
+  <hr/>
+  <input type= "text" className="form-control" placeholder="name" value={name} onChange={(e)=>{setName(e.target.value)}}/>
+  <textarea 
+  type= "text" className="form-control" placeholder="address" value={address} onChange={(e)=>{setAddress(e.target.value)}}/>
+  <input  className="form-control" placeholder="pincode" type = "number" value={pincode} onChange={(e)=>{setPincode(e.target.value)}}/>
+  <input className="form-control" placeholder="phoneNumber" type = "number" value={phoneNumber} onChange={(e)=>{setPhoneNumber(e.target.value)}}/>
+
+{/* <button className="my-3" onClick={placeOrder}>REGISTER</button> */}
+<hr/>
+{/* <Link to='/login'>click here to login</Link> */}
+
+
+</div>
+</Modal.Body>
+        <Modal.Footer>
+          <button onClick={handleClose}>
+            Close
+          </button>
+          <button  onClick={placeOrder}>
+            Order 
+          </button>
+        </Modal.Footer>
+      </Modal>
+
+
 
     </Layout>
   );
