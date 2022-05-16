@@ -12,6 +12,8 @@ function HomePage() {
 const dispatch = useDispatch();
 const {cartItems} = useSelector(state=>state.cartReducer);
 const[loading,setLoading] = useState(false);
+const [searchkey,setSearchkey] = useState('');
+const[filterType,setFilterType] = useState('');
 const navigate = useNavigate();
   useEffect(() => {
     getData();
@@ -60,10 +62,29 @@ const navigate = useNavigate();
 
       <div className='container'>
 
+<div className="d-flex w-50 align-items-center my-3 justify-content-center">
+<input type = "text" 
+value={searchkey}
+onChange={(e) => {setSearchkey(e.target.value)}}
+className="form-cotrol mx-2" placeholder = "search items"/>
 
+<select className="form-control mt-3" value={filterType}
+onChange={(e)=> {setFilterType(e.target.value)}}
+>
+<option value = "">All</option>
+<option value = "appliances">Electronics</option>
+<option value = "stationery">stationery</option>
+<option value = "clothes">fashion</option>
+
+
+
+</select>
+</div>
 
         <div className='row'>
-          {products.map((product) => {
+          {products.filter(obj=>obj.name.toLowerCase().includes(searchkey))
+          .filter((obj)=>obj.category.toLowerCase().includes(filterType))
+          .map((product) => {
             return <div className="col-md-4">
               <div className="m-2 p-1 product position-relative">
                 <div className="product-content">
